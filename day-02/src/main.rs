@@ -1,4 +1,5 @@
 use itertools::Itertools;
+use std::cmp::Ordering;
 #[allow(clippy::wildcard_imports)]
 use utils::*;
 
@@ -20,16 +21,40 @@ fn parse(input: &str) -> ParseResult<InputData> {
     parser(input)
 }
 
-fn is_safe(report: &[u32]) -> bool {
-    use std::cmp::Ordering::*;
-    let expected = report[0].cmp(&report[1]);
-    for (&a, &b) in report.iter().tuple_windows() {
-        match (expected, a.cmp(&b), a.abs_diff(b)) {
-            (Greater, Greater, diff) | (Less, Less, diff) if (1..=3).contains(&diff) => continue,
-            _ => return false,
+fn is_gap_safe(expected: Ordering, a: u32, b: u32) -> bool {
+    use Ordering::*;
+    matches!(
+        (expected, a.cmp(&b), a.abs_diff(b)),
+        (Greater, Greater, diff) | (Less, Less, diff) if (1..=3).contains(&diff)
+    )
+}
+
+fn is_safe<'a>(mut report: impl Iterator<Item = &'a u32>) -> bool {
+    let Some(first) = report.next() else {
+        return false;
+    };
+    let Some(second) = report.next() else {
+        return true;
+    };
+    let expected = first.cmp(second);
+    for (&a, &b) in [first, second].into_iter().chain(report).tuple_windows() {
+        if !is_gap_safe(expected, a, b) {
+            return false;
         }
     }
     true
+}
+
+fn is_recoverable(report: &[u32]) -> bool {
+    (0..=report.len()).any(|i| {
+        is_safe(
+            report
+                .iter()
+                .enumerate()
+                .filter(|(j, _)| i != *j)
+                .map(|(_, m)| m),
+        )
+    })
 }
 
 #[allow(clippy::unnecessary_wraps)]
@@ -37,13 +62,17 @@ fn part1(input: &InputData) -> AocResult<usize> {
     Ok(input
         .reports
         .iter()
-        .filter(|report| is_safe(report))
+        .filter(|report| is_safe(report.iter()))
         .count())
 }
 
 #[allow(clippy::unnecessary_wraps)]
-fn part2(input: &InputData) -> AocResult<()> {
-    Ok(())
+fn part2(input: &InputData) -> AocResult<usize> {
+    Ok(input
+        .reports
+        .iter()
+        .filter(|report| is_recoverable(report))
+        .count())
 }
 
 aoc_main!(parse, part1, part2);
@@ -85,6 +114,6 @@ mod tests {
 
     #[test]
     fn test_part2() {
-        // assert_part!(parse, part2, INPUT, ());
+        assert_part!(parse, part2, INPUT, 4);
     }
 }
