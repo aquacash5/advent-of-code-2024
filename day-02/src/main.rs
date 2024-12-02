@@ -46,7 +46,7 @@ fn is_safe<'a>(mut report: impl Iterator<Item = &'a u32>) -> bool {
 }
 
 fn is_recoverable(report: &[u32]) -> bool {
-    (0..=report.len()).any(|i| {
+    (0..report.len()).any(|i| {
         is_safe(
             report
                 .iter()
