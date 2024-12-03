@@ -22,7 +22,7 @@ fn parse(input: &str) -> ParseResult<InputData> {
 }
 
 fn is_gap_safe(expected: Ordering, a: u32, b: u32) -> bool {
-    use Ordering::*;
+    use Ordering::{Greater, Less};
     matches!(
         (expected, a.cmp(&b), a.abs_diff(b)),
         (Greater, Greater, diff) | (Less, Less, diff) if (1..=3).contains(&diff)
