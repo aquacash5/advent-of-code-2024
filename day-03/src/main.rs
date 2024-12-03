@@ -4,7 +4,6 @@ use utils::*;
 #[derive(Debug, PartialEq)]
 enum Operation {
     Multiply(u32, u32),
-    Other(char),
     Do,
     Dont,
 }
@@ -20,18 +19,18 @@ fn parse(input: &str) -> ParseResult<InputData> {
         bytes::complete::tag,
         character::complete::{anychar, u32},
         combinator::map,
-        multi::many1,
+        multi::{many1, many_till},
         sequence::{delimited, separated_pair},
     };
-    let multiply = map(
-        delimited(tag("mul("), separated_pair(u32, tag(","), u32), tag(")")),
-        |(a, b)| Operation::Multiply(a, b),
-    );
+
+    let num_pair = separated_pair(u32, tag(","), u32);
+    let multiply = delimited(tag("mul("), num_pair, tag(")"));
+    let multiply = map(multiply, |(a, b)| Operation::Multiply(a, b));
     let do_ = map(tag("do()"), |_| Operation::Do);
     let dont = map(tag("don't()"), |_| Operation::Dont);
-    let other = map(anychar, Operation::Other);
-    let maybe = alt((multiply, do_, dont, other));
-    let mut parser = map(many1(maybe), |operations| InputData { operations });
+    let operations = alt((multiply, do_, dont));
+    let operations = map(many_till(anychar, operations), |(_, operation)| operation);
+    let mut parser = map(many1(operations), |operations| InputData { operations });
     parser(input)
 }
 
@@ -54,7 +53,6 @@ fn part2(input: &InputData) -> AocResult<u32> {
         .iter()
         .fold((true, 0), |(enabled, total), operation| match operation {
             Operation::Multiply(a, b) => (enabled, if enabled { total + (a * b) } else { total }),
-            Operation::Other(_) => (enabled, total),
             Operation::Do => (true, total),
             Operation::Dont => (false, total),
         })
@@ -79,48 +77,10 @@ mod tests {
             INPUT1,
             InputData {
                 operations: vec![
-                    Other('x'),
                     Multiply(2, 4),
-                    Other('%'),
-                    Other('&'),
-                    Other('m'),
-                    Other('u'),
-                    Other('l'),
-                    Other('['),
-                    Other('3'),
-                    Other(','),
-                    Other('7'),
-                    Other(']'),
-                    Other('!'),
-                    Other('@'),
-                    Other('^'),
-                    Other('d'),
-                    Other('o'),
-                    Other('_'),
-                    Other('n'),
-                    Other('o'),
-                    Other('t'),
-                    Other('_'),
                     Multiply(5, 5),
-                    Other('+'),
-                    Other('m'),
-                    Other('u'),
-                    Other('l'),
-                    Other('('),
-                    Other('3'),
-                    Other('2'),
-                    Other(','),
-                    Other('6'),
-                    Other('4'),
-                    Other(']'),
-                    Other('t'),
-                    Other('h'),
-                    Other('e'),
-                    Other('n'),
-                    Other('('),
                     Multiply(11, 8),
                     Multiply(8, 5),
-                    Other(')')
                 ]
             }
         );
@@ -129,41 +89,12 @@ mod tests {
             INPUT2,
             InputData {
                 operations: vec![
-                    Other('x'),
                     Multiply(2, 4),
-                    Other('&'),
-                    Other('m'),
-                    Other('u'),
-                    Other('l'),
-                    Other('['),
-                    Other('3'),
-                    Other(','),
-                    Other('7'),
-                    Other(']'),
-                    Other('!'),
-                    Other('^'),
                     Dont,
-                    Other('_'),
                     Multiply(5, 5),
-                    Other('+'),
-                    Other('m'),
-                    Other('u'),
-                    Other('l'),
-                    Other('('),
-                    Other('3'),
-                    Other('2'),
-                    Other(','),
-                    Other('6'),
-                    Other('4'),
-                    Other(']'),
-                    Other('('),
                     Multiply(11, 8),
-                    Other('u'),
-                    Other('n'),
                     Do,
-                    Other('?'),
                     Multiply(8, 5),
-                    Other(')')
                 ]
             }
         );
