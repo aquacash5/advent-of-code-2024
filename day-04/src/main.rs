@@ -8,6 +8,7 @@ struct InputData {
     letters: Array2<u8>,
 }
 
+#[allow(clippy::unnecessary_wraps)]
 fn parse(input: &str) -> ParseResult<InputData> {
     let input = input.trim();
     let row_count = input.lines().count();
