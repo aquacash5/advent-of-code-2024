@@ -10,13 +10,13 @@ struct InputData {
 
 fn parse(input: &str) -> ParseResult<InputData> {
     use nom::{
-        character::complete::{newline, space1, u32},
+        character::complete::{line_ending, space1, u32},
         combinator::map,
         multi::separated_list1,
     };
 
     let report = separated_list1(space1, u32);
-    let reports = separated_list1(newline, report);
+    let reports = separated_list1(line_ending, report);
     let mut parser = map(reports, |reports| InputData { reports });
     parser(input)
 }

@@ -16,17 +16,17 @@ struct InputData {
 fn parse(input: &str) -> ParseResult<InputData> {
     use nom::{
         bytes::complete::tag,
-        character::complete::{newline, u32},
+        character::complete::{line_ending, u32},
         combinator::map,
         multi::separated_list1,
         sequence::{pair, separated_pair},
     };
 
     let order = separated_pair(u32, tag("|"), u32);
-    let orders = separated_list1(newline, order);
+    let orders = separated_list1(line_ending, order);
     let pages = separated_list1(tag(","), u32);
-    let manuals = separated_list1(newline, pages);
-    let groups = separated_pair(orders, pair(newline, newline), manuals);
+    let manuals = separated_list1(line_ending, pages);
+    let groups = separated_pair(orders, pair(line_ending, line_ending), manuals);
     let mut parser = map(groups, |(orders, manuals)| InputData {
         orders: orders.into_iter().into_group_map(),
         manuals,
