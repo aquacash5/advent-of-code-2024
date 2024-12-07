@@ -143,10 +143,11 @@ fn part1(input: &InputData) -> AocResult<usize> {
 
 #[allow(clippy::unnecessary_wraps)]
 fn part2(input: &InputData) -> AocResult<usize> {
-    Ok((input.rows.clone())
-        .cartesian_product(input.columns.clone())
-        .map(|(row, col)| Point { row, col })
-        .filter(|p| !input.points.contains(p))
+    Ok(input
+        .walk()
+        .skip(1)
+        .map(|g| g.location)
+        .unique()
         .par_bridge()
         .filter(|p| {
             let mut seen: HashSet<Guard> = HashSet::new();
