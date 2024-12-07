@@ -42,8 +42,8 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-itertools = "0.13.0"
-nom = "7.1.3"
+itertools.workspace = true
+nom.workspace = true
 utils = {{ path = "../utils", version = "*" }}
 
 "# }
