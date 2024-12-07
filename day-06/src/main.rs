@@ -149,15 +149,7 @@ fn part2(input: &InputData) -> AocResult<usize> {
         .map(|g| g.location)
         .unique()
         .par_bridge()
-        .filter(|p| {
-            let mut seen: HashSet<Guard> = HashSet::new();
-            for guard in input.alternate(*p).walk() {
-                if !seen.insert(guard) {
-                    return true;
-                }
-            }
-            false
-        })
+        .filter(|p| !input.alternate(*p).walk().all_unique())
         .count())
 }
 
