@@ -143,19 +143,16 @@ fn part1(input: &InputData) -> AocResult<usize> {
 
 #[allow(clippy::unnecessary_wraps)]
 fn part2(input: &InputData) -> AocResult<usize> {
-    let options: Vec<Point> = input
+    Ok(input
         .rows
         .clone()
         .cartesian_product(input.columns.clone())
         .map(|(row, col)| Point { row, col })
         .filter(|p| !input.points.contains(p))
-        .collect_vec();
-    Ok(options
-        .into_par_iter()
-        .map(|p| input.alternate(p))
-        .filter(|alt| {
+        .par_bridge()
+        .filter(|p| {
             let mut seen: HashSet<Guard> = HashSet::new();
-            for guard in alt.walk() {
+            for guard in input.alternate(*p).walk() {
                 if !seen.insert(guard) {
                     return true;
                 }
