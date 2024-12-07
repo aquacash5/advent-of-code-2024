@@ -143,9 +143,7 @@ fn part1(input: &InputData) -> AocResult<usize> {
 
 #[allow(clippy::unnecessary_wraps)]
 fn part2(input: &InputData) -> AocResult<usize> {
-    Ok(input
-        .rows
-        .clone()
+    Ok((input.rows.clone())
         .cartesian_product(input.columns.clone())
         .map(|(row, col)| Point { row, col })
         .filter(|p| !input.points.contains(p))
