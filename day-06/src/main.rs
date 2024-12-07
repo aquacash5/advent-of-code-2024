@@ -50,7 +50,7 @@ struct Guard {
 #[derive(Debug)]
 struct Walk<'a> {
     guard: Guard,
-    points: &'a HashSet<Point>,
+    obstacles: &'a HashSet<Point>,
     rows: &'a Range<usize>,
     columns: &'a Range<usize>,
     first: bool,
@@ -68,7 +68,7 @@ impl Iterator for Walk<'_> {
             .guard
             .location
             .next_in_direction(self.guard.direction)?;
-        if self.points.contains(&next) {
+        if self.obstacles.contains(&next) {
             self.guard.direction = self.guard.direction.rotate();
             Some(self.guard)
         } else if self.rows.contains(&next.row) && self.columns.contains(&next.col) {
@@ -82,7 +82,7 @@ impl Iterator for Walk<'_> {
 
 #[derive(Debug, PartialEq, Clone)]
 struct InputData {
-    points: HashSet<Point>,
+    obstacles: HashSet<Point>,
     start: Point,
     rows: Range<usize>,
     columns: Range<usize>,
@@ -95,7 +95,7 @@ impl InputData {
                 location: self.start,
                 direction: Direction::North,
             },
-            points: &self.points,
+            obstacles: &self.obstacles,
             rows: &self.rows,
             columns: &self.columns,
             first: true,
@@ -104,7 +104,7 @@ impl InputData {
 
     fn alternate(&self, p: Point) -> Self {
         let mut alt = self.clone();
-        alt.points.insert(p);
+        alt.obstacles.insert(p);
         alt
     }
 }
@@ -128,7 +128,7 @@ fn parse(input: &str) -> ParseResult<InputData> {
     Ok((
         input,
         InputData {
-            points,
+            obstacles: points,
             start: start.unwrap(),
             rows: 0..height,
             columns: 0..width,
@@ -184,7 +184,7 @@ mod tests {
             parse,
             INPUT,
             InputData {
-                points: HashSet::from([
+                obstacles: HashSet::from([
                     Point { row: 0, col: 4 },
                     Point { row: 7, col: 8 },
                     Point { row: 3, col: 2 },
