@@ -1,3 +1,4 @@
+use itertools::Itertools;
 #[allow(clippy::wildcard_imports)]
 use utils::*;
 
@@ -40,16 +41,17 @@ fn parse(input: &str) -> ParseResult<InputData> {
 }
 
 fn can_calibrate(result: u64, nums: &[u64], operations: &[Operation]) -> bool {
-    fn calibration_total(result: u64, total: u64, nums: &[u64], operations: &[Operation]) -> bool {
-        let Some((head, tail)) = nums.split_first() else {
-            return total == result;
-        };
+    let (head, tail) = nums.split_first().unwrap();
 
-        operations
-            .iter()
-            .any(|o| calibration_total(result, o.apply(total, *head), tail, operations))
-    }
-    calibration_total(result, nums[0], &nums[1..], operations)
+    (0..tail.len())
+        .map(|_| operations)
+        .multi_cartesian_product()
+        .any(|ops| {
+            ops.iter()
+                .zip(tail.iter())
+                .fold(*head, |cur, (op, next)| op.apply(cur, *next))
+                .eq(&result)
+        })
 }
 
 #[allow(clippy::unnecessary_wraps)]
