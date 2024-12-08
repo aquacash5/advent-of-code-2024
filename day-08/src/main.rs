@@ -10,6 +10,13 @@ struct Point {
 }
 
 impl Point {
+    fn new(row: usize, col: usize) -> Self {
+        Self {
+            row: row as isize,
+            col: col as isize,
+        }
+    }
+
     /// The point across from `self` of a circle centered on `other`.
     ///
     /// | Label | Name     |
@@ -88,7 +95,7 @@ impl Iterator for Antinodes {
 
 #[derive(Debug, PartialEq)]
 struct InputData {
-    nodes: Vec<(u8, Point)>,
+    nodes: Vec<Vec<Point>>,
     rows: Range<isize>,
     cols: Range<isize>,
 }
@@ -96,20 +103,19 @@ struct InputData {
 fn parse(input: &str) -> ParseResult<InputData> {
     let rows = 0..input.lines().count() as isize;
     let cols = 0..input.lines().next().unwrap().len() as isize;
-    let mut nodes: Vec<(u8, Point)> = vec![];
-    for (row, line) in input.lines().enumerate() {
-        for (col, c) in line.bytes().enumerate() {
-            if c != b'.' {
-                nodes.push((
-                    c,
-                    Point {
-                        row: row as isize,
-                        col: col as isize,
-                    },
-                ));
-            }
-        }
-    }
+    let nodes = input
+        .lines()
+        .enumerate()
+        .flat_map(|(row, line)| {
+            line.bytes()
+                .enumerate()
+                .filter(|(_, c)| *c != b'.')
+                .map(move |(col, c)| (c, Point::new(row, col)))
+        })
+        .into_group_map()
+        .values()
+        .cloned()
+        .collect_vec();
     Ok((input, InputData { nodes, rows, cols }))
 }
 
@@ -118,9 +124,8 @@ fn part1(input: &InputData) -> AocResult<usize> {
     Ok(input
         .nodes
         .iter()
-        .cartesian_product(input.nodes.iter())
-        .filter(|((n1, p1), (n2, p2))| n1 == n2 && p1 != p2)
-        .map(|((_, p1), (_, p2))| p1.antinode(p2))
+        .flat_map(|ant| ant.iter().tuple_combinations())
+        .flat_map(|(p1, p2)| [p1.antinode(p2), p2.antinode(p1)])
         .filter(|p| p.within(&input.rows, &input.cols))
         .unique()
         .count())
@@ -131,13 +136,16 @@ fn part2(input: &InputData) -> AocResult<usize> {
     Ok(input
         .nodes
         .iter()
-        .cartesian_product(input.nodes.iter())
-        .filter(|((n1, p1), (n2, p2))| p1 != p2 && n1 == n2)
-        .flat_map(|((_, p1), (_, p2))| {
-            p1.antinodes(p2)
-                .take_while(|p| p.within(&input.rows, &input.cols))
+        .flat_map(|ant| ant.iter().tuple_combinations())
+        .flat_map(|(p1, p2)| {
+            let p1_p2 = p1
+                .antinodes(p2)
+                .take_while(|p| p.within(&input.rows, &input.cols));
+            let p2_p1 = p2
+                .antinodes(p1)
+                .take_while(|p| p.within(&input.rows, &input.cols));
+            [*p1, *p2].into_iter().chain(p1_p2).chain(p2_p1)
         })
-        .chain(input.nodes.iter().map(|(_, p)| *p))
         .unique()
         .count())
 }
@@ -168,13 +176,17 @@ mod tests {
             INPUT,
             InputData {
                 nodes: vec![
-                    (48, Point { row: 1, col: 8 }),
-                    (48, Point { row: 2, col: 5 }),
-                    (48, Point { row: 3, col: 7 }),
-                    (48, Point { row: 4, col: 4 }),
-                    (65, Point { row: 5, col: 6 }),
-                    (65, Point { row: 8, col: 8 }),
-                    (65, Point { row: 9, col: 9 })
+                    vec![
+                        Point { row: 1, col: 8 },
+                        Point { row: 2, col: 5 },
+                        Point { row: 3, col: 7 },
+                        Point { row: 4, col: 4 },
+                    ],
+                    vec![
+                        Point { row: 5, col: 6 },
+                        Point { row: 8, col: 8 },
+                        Point { row: 9, col: 9 },
+                    ]
                 ],
                 rows: 0..12,
                 cols: 0..12
