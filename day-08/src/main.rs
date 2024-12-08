@@ -10,6 +10,23 @@ struct Point {
 }
 
 impl Point {
+    /// The point across from `self` of a circle centered on `other`.
+    ///
+    /// | Label | Name     |
+    /// | ----- | -------- |
+    /// | `S`   | self     |
+    /// | `O`   | other    |
+    /// | `A`   | antinode |
+    ///
+    /// ```ascii
+    /// .......
+    /// .....A.
+    /// ..../..
+    /// ...O...
+    /// ../....
+    /// .S.....
+    /// .......
+    /// ```
     fn antinode(&self, other: &Self) -> Point {
         Point {
             row: other.row - (self.row - other.row),
@@ -17,6 +34,28 @@ impl Point {
         }
     }
 
+    /// The points every N distance on a ray starting on `self` going through
+    /// `other` where N is the distance between `self` and `other`. The first
+    /// element is the antinode of `self` to `other`.
+    ///
+    /// | Label | Name            |
+    /// | ----- | --------------- |
+    /// | `S`   | self            |
+    /// | `O`   | other           |
+    /// | `A`   | first antinode  |
+    /// | `B`   | second antinode |
+    ///
+    /// ```ascii
+    /// .........
+    /// .......B.
+    /// ....../..
+    /// .....A...
+    /// ..../....
+    /// ...O.....
+    /// ../......
+    /// .S.......
+    /// .........
+    /// ```
     fn antinodes(&self, other: &Self) -> Antinodes {
         Antinodes {
             p1: *self,
@@ -29,6 +68,10 @@ impl Point {
     }
 }
 
+/// The points every N distance on a ray starting on `self` going through
+/// `other` where N is the distance between `self` and `other`. The first
+/// element is the antinode of `self` to `other`. See also
+/// [antinodes function](Point::antinodes)
 struct Antinodes {
     p1: Point,
     p2: Point,
@@ -76,7 +119,7 @@ fn part1(input: &InputData) -> AocResult<usize> {
         .nodes
         .iter()
         .cartesian_product(input.nodes.iter())
-        .filter(|((n1, p1), (n2, p2))| p1 != p2 && n1 == n2)
+        .filter(|((n1, p1), (n2, p2))| n1 == n2 && p1 != p2)
         .map(|((_, p1), (_, p2))| p1.antinode(p2))
         .filter(|p| p.within(&input.rows, &input.cols))
         .unique()
